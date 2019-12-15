@@ -19,8 +19,8 @@ import {
 import UserInput from './UserInput';
 import Button from 'react-native-button';
 
-import usernameImg from './Image/username.png';
-import passwordImg from './Image/password.png';
+import usernameImg from './Images/username.png';
+import passwordImg from './Images/password.png';
 
 export default class LoginPage extends Component {
 
@@ -37,27 +37,64 @@ export default class LoginPage extends Component {
   	}
 
   	login = () =>{
+      console.log("I am inside login()")
   		const {employee_code,userPassword} = this.state;
-  		let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/ ;
+  	//	let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/ ;
   		if(employee_code==""){
+        console.log("emp code is empty")
   			//alert("Please enter Email address");
   		  this.setState({employee_code:'Please enter Emplyee id'})
 
   		}
 
-  		else if(reg.test(employee_code) === false)
+  	/*	else if(reg.test(employee_code) === false)
   		{
+        console.log("regex error")
   		//alert("Email is Not Correct");
   		this.setState({employee_code:'Emplyee id is Not Correct'})
   		return false;
-  		  }
+    }*/
 
   		else if(userPassword==""){
+        console.log("password is empty")
   		this.setState({employee_code:'Please enter password'})
   		}
   		else{
+        console.log("I am going to call login api")
+        var data = JSON.stringify({
+  				// we will pass our input data to server
+  				employee_code: this.state.employee_code,
+  				password: this.state.userPassword,
+          device_id: "jdffhdf",
+          device_type: "android"
+  			})
+console.log(data);
+var xhr = new XMLHttpRequest();
+xhr.withCredentials = true;
+xhr.timeout = 60000;
+const context=this;
+xhr.addEventListener("readystatechange", function () {
+  console.log(xhr.status)
+  console.log(xhr.readyState)
+    if (xhr.readyState !== 4) {
+                return;
+    }
+    if (xhr.status === 200) {
+      console.log("Successfully200")
+      context.props.navigation.navigate("welcome");
+    }else{
+      console.log("inside error")
+      alert(xhr.responseText);
+    }
+});
 
-  		fetch('http://erpportaltest.xeamventures.com/api/v1/login',{
+xhr.open("POST", "http://erpportaltest.xeamventures.com/api/v1/login");
+xhr.setRequestHeader("accept", "application/json");
+xhr.setRequestHeader("content-type", "application/json");
+
+
+xhr.send(data);
+  		/*fetch('http://erpportaltest.xeamventures.com/api/v1/login',{
   			method:'post',
   			header:{
   				'Accept': 'application/json',
@@ -68,9 +105,8 @@ export default class LoginPage extends Component {
   				employee_code: employee_code,
   				password: userPassword
   			})
-
   		})
-  		.then((response) => response.json())
+  		.then((response) => if(response.ok){response.json()})
   		 .then((responseJson)=>{
   			 if(responseJson == "ok"){
   				 // redirect to profile page
@@ -83,11 +119,12 @@ export default class LoginPage extends Component {
   		 .catch((error)=>{
   		 console.error(error);
   		 });
-  		}
+  		}*/
 
 
-  		Keyboard.dismiss();
+  	//	Keyboard.dismiss();
   	}
+  }
   render () {
     const {navigate} = this.props.navigation;
     return (
@@ -104,6 +141,8 @@ export default class LoginPage extends Component {
           placeholder="Emplyee Code"
           autoCapitalize={'none'}
           returnKeyType={'done'}
+          value={this.state.employee_code}
+          onChangeText={(value) => this.setState({ employee_code: value })}
           autoCorrect={false}
         />
         <UserInput
@@ -112,7 +151,8 @@ export default class LoginPage extends Component {
           placeholder="Password"
           returnKeyType={'done'}
           autoCapitalize={'none'}
-
+          value={this.state.userPassword}
+          onChangeText={(value) => this.setState({ userPassword: value })}
           autoCorrect={false}
         />
 
@@ -124,7 +164,7 @@ export default class LoginPage extends Component {
 
           <Button
             style={styles.button}
-            onPress={() => navigate('welcome')}>
+            onPress={() => this.login()}>
             SUBMIT
           </Button>
         </Card>
