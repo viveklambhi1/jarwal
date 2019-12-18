@@ -1,0 +1,9 @@
+  var data = JSON.stringify({
+  				// we will pass our input data to server
+  				employee_code: this.state.employee_code,
+  				password: this.state.userPassword,
+           employee:this.state.employee,
+          device_id: "jdffhdf",
+          device_type: "android"
+
+  			})
