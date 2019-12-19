@@ -1,21 +1,38 @@
+var _ = require('underscore');
+let { UIImagePickerManager: ImagePickerManager } = NativeModules;
+var sha1 = require('sha1');
+
  UIImagePickerManager.showImagePicker(options, (didCancel, response) => {
-        console.log('Response = ', response);
-        if (didCancel) {
-            console.log('User cancelled image picker');
-        }
-        else {
-            var fileName = response.uri.substring(response.uri.lastIndexOf("/") + 1);
-            var fsPath = response.uri;
-            var binaryResponse = response.data;
-            fetch('http://XXXX/user/avatar', {
-                method: 'POST', // default 'POST',support 'POST' and 'PUT'
-                headers: {
-                    'Authorization': AuthStore.getUserTokenWithBearer()
-                },
-                body: JSON.stringify({image: fsPath})
-            }).then(function (response) {
-                console.log(response)
-            }).catch(function(error){
-                console.log(error);
-            });
-        }
+       console.log('Response = ', response);
+       if (didCancel) {
+           return console.log('User cancelled image picker');
+       }
+       var url = 'https://api.cloudinary.com/v1_1/' + cloud_name + '/image/upload';
+       var header = {
+            method: 'post',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+           }
+       };
+      var timestamp = Date.now();
+
+      var values = {
+       file: 'data:image/png;base64,' + response.data,
+       api_key: api_key,
+       timestamp: timestamp,
+       tags: tags,
+       signature: sha1("tags=" + tags + "&timestamp=" + timestamp + api_secret)
+     };
+
+     var request = _.extend({
+        body: JSON.stringify(values)
+     }, header);
+
+     fetch(url, request)
+         .then((response) => response.json())
+         .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => { console.log(err) });}
+}
