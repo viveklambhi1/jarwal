@@ -1,9 +1,21 @@
-  var data = JSON.stringify({
-  				// we will pass our input data to server
-  				employee_code: this.state.employee_code,
-  				password: this.state.userPassword,
-           employee:this.state.employee,
-          device_id: "jdffhdf",
-          device_type: "android"
-
-  			})
+ UIImagePickerManager.showImagePicker(options, (didCancel, response) => {
+        console.log('Response = ', response);
+        if (didCancel) {
+            console.log('User cancelled image picker');
+        }
+        else {
+            var fileName = response.uri.substring(response.uri.lastIndexOf("/") + 1);
+            var fsPath = response.uri;
+            var binaryResponse = response.data;
+            fetch('http://XXXX/user/avatar', {
+                method: 'POST', // default 'POST',support 'POST' and 'PUT'
+                headers: {
+                    'Authorization': AuthStore.getUserTokenWithBearer()
+                },
+                body: JSON.stringify({image: fsPath})
+            }).then(function (response) {
+                console.log(response)
+            }).catch(function(error){
+                console.log(error);
+            });
+        }
