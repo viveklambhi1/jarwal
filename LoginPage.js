@@ -4,6 +4,7 @@ import {
   Text,
   KeyboardAvoidingView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 
 import {createAppContainer} from 'react-navigation';
@@ -18,21 +19,20 @@ import {
 } from 'react-native-card-view';
 import UserInput from './UserInput';
 import Button from 'react-native-button';
-
-import usernameImg from './Images/username.png';
-import passwordImg from './Images/password.png';
+import Welcomepage from '../src/Welcomepage';
+import usernameImg from './Image/username.png';
+import passwordImg from './Image/password.png';
 
 export default class LoginPage extends Component {
 
   static navigationOptions = {
-
+     header: null,
   };
-
   	constructor(props){
   		super(props)
   		this.state={
-  			employee_code:'',
-  			userPassword:''
+  			employee_code:'29021',
+  			userPassword:'pankaj@1234',
   		}
   	}
 
@@ -44,21 +44,20 @@ export default class LoginPage extends Component {
         console.log("emp code is empty")
   			//alert("Please enter Email address");
   		  this.setState({employee_code:'Please enter Emplyee id'})
-
   		}
-
-  	/*	else if(reg.test(employee_code) === false)
-  		{
-        console.log("regex error")
-  		//alert("Email is Not Correct");
-  		this.setState({employee_code:'Emplyee id is Not Correct'})
-  		return false;
-    }*/
-
-  		else if(userPassword==""){
-        console.log("password is empty")
-  		this.setState({employee_code:'Please enter password'})
-  		}
+//   		else if(reg.test(employee_code) === false)
+//   		{
+//         console.log("regex error")
+//   		//alert("Email is Not Correct");
+//   		this.setState({employee_code:'Emplyee id is Not Correct'})
+//   		return false;
+//
+// }
+      else if(userPassword==""){
+        console.log('abc')
+      this.setState({userPassword:'Please enter Password'})
+        Alert.alert("INVAILD ID");
+    }
   		else{
         console.log("I am going to call login api")
         var data = JSON.stringify({
@@ -81,18 +80,17 @@ xhr.addEventListener("readystatechange", function () {
     }
     if (xhr.status === 200) {
       console.log("Successfully200")
-      context.props.navigation.navigate("welcome");
+      // context.props.navigation.navigate("welcome");
+      context.props.navigation.navigate("welcome",{userObj:xhr.responseText});
+      context.props.navigation.navigate("camera",{abc:xhr.responseTxt});
     }else{
       console.log("inside error")
-      alert(xhr.responseText);
+       Alert.alert("INVALID ID");
     }
 });
-
 xhr.open("POST", "http://erpportaltest.xeamventures.com/api/v1/login");
 xhr.setRequestHeader("accept", "application/json");
 xhr.setRequestHeader("content-type", "application/json");
-
-
 xhr.send(data);
   		/*fetch('http://erpportaltest.xeamventures.com/api/v1/login',{
   			method:'post',
@@ -129,20 +127,17 @@ xhr.send(data);
     const {navigate} = this.props.navigation;
     return (
       <KeyboardAvoidingView behavior="height" style={styles.container}>
-
       <Card style={styles.cardview}>
-
         <CardTitle>
           <Text style={styles.title}>LOGIN</Text>
         </CardTitle>
-
+         <Text style={{padding:0,margin:0,color:'red',fontSize:18}}>{this.state.employee_code}</Text>
         <UserInput
           source={usernameImg}
           placeholder="Emplyee Code"
           autoCapitalize={'none'}
           returnKeyType={'done'}
-          value={this.state.employee_code}
-          onChangeText={(value) => this.setState({ employee_code: value })}
+          onChangeText={employee_code => this.setState({ employee_code })}
           autoCorrect={false}
         />
         <UserInput
@@ -151,8 +146,7 @@ xhr.send(data);
           placeholder="Password"
           returnKeyType={'done'}
           autoCapitalize={'none'}
-          value={this.state.userPassword}
-          onChangeText={(value) => this.setState({ userPassword: value })}
+          onChangeText={userPassword => this.setState({ userPassword })}
           autoCorrect={false}
         />
 
@@ -161,12 +155,13 @@ xhr.send(data);
           style={styles.btnEye}
           onPress={this.showPass}>
         </TouchableOpacity>
-
+           <CardAction >
           <Button
             style={styles.button}
-            onPress={() => this.login()}>
-            SUBMIT
+            onPress={() =>this.login()}>
+            LOGIN
           </Button>
+          </CardAction >
         </Card>
       </KeyboardAvoidingView>
     );
@@ -182,11 +177,8 @@ const styles = StyleSheet.create({
     top:40,
   },
   button: {
-    marginRight: 10,
     color: '#DCE4EF',
-    marginRight:0,
     marginLeft:0,
-    marginTop:50,
     marginBottom: 50,
     paddingTop:23,
     paddingBottom:23,
@@ -203,11 +195,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   container: {
-
     flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
-
   },
   btnEye: {
     position: 'absolute',
