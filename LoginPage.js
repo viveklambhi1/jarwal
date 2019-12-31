@@ -31,8 +31,8 @@ export default class LoginPage extends Component {
   	constructor(props){
   		super(props)
   		this.state={
-  			employee_code:'29021',
-  			userPassword:'pankaj@1234',
+  			employee_code:'XEAM001',
+  			userPassword:'Cisco@e202#',
   		}
   	}
 
@@ -64,8 +64,8 @@ export default class LoginPage extends Component {
   				// we will pass our input data to server
   				employee_code: this.state.employee_code,
   				password: this.state.userPassword,
-          device_id: "jdffhdf",
-          device_type: "android"
+          device_id: "ajdshgads",
+          device_type: "adfafd"
   			})
 console.log(data);
 var xhr = new XMLHttpRequest();
@@ -80,10 +80,13 @@ xhr.addEventListener("readystatechange", function () {
     }
     if (xhr.status === 200) {
       console.log("Successfully200")
+            context.props.navigation.navigate("welcome",{userObj:xhr.responseText})
       // context.props.navigation.navigate("welcome");
-      context.props.navigation.navigate("welcome",{userObj:xhr.responseText});
-      context.props.navigation.navigate("camera",{abc:xhr.responseTxt});
-    }else{
+      context.props.navigation.navigate("cameraPage",{abc:xhr.responseText})
+    }
+
+
+    else{
       console.log("inside error")
        Alert.alert("INVALID ID");
     }
@@ -125,13 +128,15 @@ xhr.send(data);
   }
   render () {
     const {navigate} = this.props.navigation;
+
+     const card = {card: {width: '100%', height: '100%',}};
     return (
       <KeyboardAvoidingView behavior="height" style={styles.container}>
-      <Card style={styles.cardview}>
+      <Card styles={card}>
         <CardTitle>
           <Text style={styles.title}>LOGIN</Text>
         </CardTitle>
-         <Text style={{padding:0,margin:0,color:'red',fontSize:18}}>{this.state.employee_code}</Text>
+         <Text style={{paddingTop:0,margin:0,color:'red',fontSize:18}}>{this.state.employee_code}</Text>
         <UserInput
           source={usernameImg}
           placeholder="Emplyee Code"
@@ -170,11 +175,12 @@ xhr.send(data);
 
 const styles = StyleSheet.create({
   title: {
+    flex:0,
+    flexDirection:'row',
+     paddingTop:25,
     color: 'rgb(19,111,232)',
     fontSize: 38,
-  },
-  cardview: {
-    top:40,
+    fontWeight: 'bold',
   },
   button: {
     color: '#DCE4EF',
@@ -182,8 +188,8 @@ const styles = StyleSheet.create({
     marginBottom: 50,
     paddingTop:23,
     paddingBottom:23,
-    paddingLeft:50,
-    paddingRight:50,
+    paddingLeft:70,
+    paddingRight:70,
     backgroundColor:'rgb(19,111,232)',
     borderRadius:10,
     borderWidth: 1,
