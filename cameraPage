@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Alert,
   PermissionsAndroid,
+  ActivityIndicator,
   Image,
   PixelRatio,
   StyleSheet,
@@ -9,7 +10,7 @@ import {
   TouchableOpacity,
   View,
   KeyboardAvoidingView,
-  ImageBackground
+  ImageBackground,
 } from 'react-native';
 import ImagePicker from 'react-native-image-picker';
 import Button from 'react-native-button';
@@ -20,10 +21,19 @@ import {
   CardContent,
   CardAction,
 } from 'react-native-card-view';
+import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 import { Marker } from 'react-native-maps';
 import MapView, {PROVIDER_GOOGLE, PROVIDER_DEFAULT} from 'react-native-maps';
-
+import Geolocation from '@react-native-community/geolocation';
+import geolib from 'geolib';
+import {createAppContainer} from 'react-navigation';
+import {createStackNavigator} from 'react-navigation-stack';
 import CommentBoxInput from './CommentBoxInput';
+import Listpage from '../src/Listpage';
+import Header from '../src/header';
+import Utils from './Utils';
+
+
 
 export async function request_camera_runtime_permission() {
 
@@ -45,46 +55,31 @@ export async function request_camera_runtime_permission() {
     console.warn(err)
   }
 }
-export async function request_ACCESS_FINE_LOCATION_runtime_permission() {
 
-  try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        'title': 'XENIA LOCATION Permission',
-        'message': 'XENIA App needs access to your LOCATION '
-      }
-    )
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      Alert.alert("LOCATION Permission Granted.");
-    }
-    else {
-      Alert.alert("LOCATION Permission Not Granted");
-    }
-  } catch (err) {
-    console.warn(err)
-  }
-}
 
 export default class App extends React.Component {
   static navigationOptions = {
      header: null,
   };
-  async componentDidMount() {
-  await request_camera_runtime_permission()
-}
 
 
   constructor(props) {
     super(props)
     this.state = {
-      file:"",
+      file:'',
       comment:'',
+      isMapReady: false,
       latitude: '',
-      longitude:'',
+      longitude: '',
+      latitudeDelta: '',
+      longitudeDelta: '',
+      receivedCurrentLocation:true,
+
     };
     this.selectPhotoTapped = this.selectPhotoTapped.bind(this);
+
   }
+
   selectPhotoTapped() {
     const options = {
       quality: 1.0,
@@ -95,7 +90,7 @@ export default class App extends React.Component {
       },
     };
     ImagePicker.showImagePicker(options, response => {
-      //console.log('Response = ', response);
+      console.log('Response = ', response);
 
       if (response.didCancel) {
         console.log('User cancelled photo picker');
@@ -104,9 +99,7 @@ export default class App extends React.Component {
       } else if (response.customButton) {
         console.log('User tapped custom button: ', response.customButton);
       } else {
-        console.log(response.uri)
         let source = {uri:response.uri,type:response.type,name:response.fileName};
-        console.log(source)
         // You can also display the image using data:
         // let source = { uri: 'data:image/jpeg;base64,' + response.data };
         this.setState({
@@ -116,25 +109,84 @@ export default class App extends React.Component {
     });
   }
 
-  async componentDidMount() {
-  await request_ACCESS_FINE_LOCATION_runtime_permission()
+  componentDidMount() {
+    console.log('componentDidMount');
+      this._isMounted = true;
+      const context = this;
+      context.askPermissions(context);
+
+    }
+  askPermissions(context) {
+      //Checking for the permission just after component loaded
+      async function requestLocationPermission() {
+          console.log('requestLocationPermission');
+          try {
+              const granted = await PermissionsAndroid.request(
+                  PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
+              if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                  console.log('granted');
+                  console.log('show location dialog if gps is off');
+                  //To Check, If Permission is granted
+                  RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({ interval: 10000, fastInterval: 5000 })
+                      .then(data => {
+                          console.log('enabled or already enabled gps');
+                          // The user has accepted to enable the location services
+                          // data can be :
+                          //  - "already-enabled" if the location services has been already enabled
+                          //  - "enabled" if user has clicked on OK button in the popup
+                        Geolocation.getCurrentPosition(
+                              (position) => {
+                                  console.log("current position");
+                                  console.log(position);
+
+                                  if (context._isMounted) {
+                                      context.setState({
+                                              latitude: position.coords.latitude,
+                                              longitude: position.coords.longitude
+                                      })
+                                  }
+                              },
+                              (error) => console.log(error),
+                              { enableHighAccuracy: true, timeout: 200000, maximumAge: 2000000 },
+                          );
+                      }).catch(err => {
+                          // The user has not accepted to enable the location services or something went wrong during the process
+                          // "err" : { "code" : "ERR00|ERR01|ERR02", "message" : "message"}
+                          // codes :
+                          //  - ERR00 : The user has clicked on Cancel button in the popup
+                          //  - ERR01 : If the Settings change are unavailable
+                          //  - ERR02 : If the popup has failed to open
+                          console.log(err)
+                          if (err && err.code === 'ERR00') {
+                              BackHandler.exitApp()
+                          }
+                      });
+              } else {
+                  console.log('permission denied');
+                  BackHandler.exitApp()
+              }
+          } catch (err) {
+              console.log('error in runtime permission block');
+              console.warn(err)
+          }
+      }
+      if (Utils.isAndroid()) {
+          //Calling the permission function
+          requestLocationPermission();
+      }
   }
+
    submit = () =>{
      const {file,comment,longitude,latitude} = this.state;
      console.log("I am going to call login api")
-      // var data = JSON.stringify({
-      //     latitude:this.state.latitude,
-      //     longitude:this.state.longitude,
-      //     comment:this.state.comment,
-      //     file:this.state.file,
-      // })
-      var data = new FormData();
+
+var abc = JSON.parse(this.props.navigation.state.params.abc);
+var data = new FormData();
 data.append("latitude", this.state.latitude);
+console.log(this.state.latitude);
 data.append("longitude", this.state.longitude);
 data.append("comment", this.state.comment);
 data.append("file", this.state.file);
-
-     console.log(data);
 var xhr = new XMLHttpRequest();
 xhr.withCredentials = true;
 xhr.addEventListener("readystatechange", function () {
@@ -151,23 +203,26 @@ xhr.addEventListener("readystatechange", function () {
   console.log(this.responseText);
   alert(this.responseText);
 
-
 });
 xhr.open("POST", "http://erpportaltest.xeamventures.com/api/v1/attendance-location");
 xhr.setRequestHeader("Accept", "application/json");
-xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-xhr.setRequestHeader("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImVlYTkwNjlhMjM3NmNkZTY3OWY5OWZhYjU1OWVkOTY3NmE5Y2M5MTY3ODRhYjUwYTY5NDc3ZjZjN2U0ODhlYTY3NzU5OTI2NTgwZTdiNjg2In0.eyJhdWQiOiIzIiwianRpIjoiZWVhOTA2OWEyMzc2Y2RlNjc5Zjk5ZmFiNTU5ZWQ5Njc2YTljYzkxNjc4NGFiNTBhNjk0NzdmNmM3ZTQ4OGVhNjc3NTk5MjY1ODBlN2I2ODYiLCJpYXQiOjE1NzcxODQ0MzYsIm5iZiI6MTU3NzE4NDQzNiwiZXhwIjoxNjA4ODA2ODM2LCJzdWIiOiIxMDYiLCJzY29wZXMiOltdfQ.qcX9DC2k7VNPyVcgg5nw81DR9j0waoeTG9oasGXEWHlApKvMDuPk1_BpPqm-9GYLFwZdgfm7fxwUl7Ry16VnVxrj0WnkBsrI4J3ZSpgI5izngw4cdTW93FWZzEwfy5kW_fgvJCLxOT4ZJL-nSbkTusjXd-zTa1SeWvX7svgoWduQHYphe_1-aog0xDzDS-uEnD4ZXS1yWHU_mEEFWFxzxtJwsJl8hoUJZUDep__i2cjvcGCTj9orFoSjjj8SZvq08OLLyijrhk5YtM55l_9320H8O1VqCRZVLiJChFNbtfaI2NykUfClGnv0SfZZOBYShDtAx9op-CmS-OdwkkeHhB030BySXtcJv8qFl0xWmo2SMTCZqlXqYpGVn3vRcNgxGKB_vu-kRG56m5LCIpi49njMJWiX5BnN8Jzv1H61DnsKNTLGdgYYbiTJeKptiiW0vzUfnyMI2xc7WuPvFua2HzPDMPM6BitRu3aE3ATCbDh45BTu4IFdiLV4R25kKY8QI7ucESa2XLbfER5j2Gbt8tGNFy92MVzpTwfvUe0tlCcOggniDQ5cZpEXkEFT9nZaQdj1V-Tl-EcnA7bXhTHicu2Z-jjsUFTiAOAEautEF2K4yY_SM4NJF-DlGaEGe7vx2w9Mc0Qoelsgx3Sb9rtVo-tc7ToAxqsrAv5mNrfKsaI");
+xhr.setRequestHeader("Content-Type", "multipart/form-data");
+xhr.setRequestHeader("Authorization", "Bearer " + abc.success.secret_token,);
 xhr.send(data);
    }
 
   render() {
+
+    const {navigate} = this.props.navigation;
     const card = {card: {width: 500, height: 350}};
+
     return (
       <KeyboardAvoidingView behavior="position" style={styles.container}>
       <Card styles={card}>
+      <Header/>
         <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
           <View
-            style={[styles.avatar, styles.avatarContainer, {marginTop: -7}]}>
+            style={[styles.avatar, styles.avatarContainer, {marginTop: 0}]}>
             {this.state.file === null ? (
               <Text style={{fontSize:10, textColor:'blue'}}>Select a Photo</Text>
             ) : (
@@ -180,19 +235,21 @@ xhr.send(data);
               style={styles.mapStyle}
               provider={PROVIDER_GOOGLE}
               showsUserLocation={true}
+              zoomUserLocation={true}
               zoomEnabled={true}
               zoomControlEnabled={true}
-              Region={{
-                latitude: 30.715260,
-                longitude: 76.707770,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}>
-              <Marker
-                coordinate={{ latitude:30.715260, longitude:76.707770 }}
-                title={""}
-                description={""}
-              />
+              mapType='standard'
+              
+            >
+            {this.state.isMapReady &&
+                     <MapView.Marker
+                         title={this.props.title}
+                         coordinate={{
+                             latitude: position.coords.latitude,
+                             longitude: position.coords.longitude
+                         }} />
+                 }
+
             </MapView>
           </View>
           <CommentBoxInput
@@ -242,28 +299,24 @@ const styles = StyleSheet.create({
   },
   avatar: {
     borderRadius: 10,
-    borderTopWidth: 1,
-    borderBottomWidth:1,
-    borderRightWidth:1,
-    borderLeftWidth:1,
+    borderTopWidth: 2,
+    borderBottomWidth:2,
+    borderRightWidth:2,
+    borderLeftWidth:2,
     width:400,
     height: 150,
   },
   MainContainer: {
+    flex:2,
+    flexDirection:'row',
+    alignItems:'center',
     borderRadius: 8,
     borderTopWidth: 1,
     borderBottomWidth:1,
     borderRightWidth:1,
     borderLeftWidth:1,
-    position: 'absolute',
-    height: 200,
-    width: 400,
-    marginBottom: 200,
-    left: 50,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    height: '50%',
+    width: '80%',
   },
   mapStyle: {
     position: 'absolute',
