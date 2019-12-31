@@ -31,7 +31,6 @@ export default class Welcomepage extends Component {
        console.log(userObj.success.user.employee.profile_picture);
         const {navigate} = this.props.navigation;
         var profile_picture={uri:userObj.success.user.employee.profile_picture};
-
 		return(
 
            <Card>
