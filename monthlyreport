@@ -1,0 +1,141 @@
+import React from 'react';
+import {
+  FlatList,
+  Alert,
+  PermissionsAndroid,
+  ActivityIndicator,
+  Image,
+  PixelRatio,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  ImageBackground,
+  ScrollView,
+} from 'react-native';
+ // import {ListView} from 'deprecated-react-native-listview';
+import ImagePicker from 'react-native-image-picker';
+import Button from 'react-native-button';
+import {
+  Card,
+  CardImage,
+  CardTitle,
+  CardContent,
+  CardAction,
+
+} from 'react-native-card-view';
+
+import {createAppContainer} from 'react-navigation';
+import {createStackNavigator} from 'react-navigation-stack';
+import Header from '../src/cameraHeader';
+
+
+
+
+export default class monthlyreport extends React.Component {
+  static navigationOptions = {
+     header: null,
+  };
+
+  constructor(props) {
+    super(props)
+    this.state = {
+         year:2019,
+         month:10,
+         user_id:106,
+         abc: [],
+    };
+    // this.dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1!==r2});
+  }
+   show =() =>{
+     const {year,month,user_id} = this.state;
+     console.log("I am going to call show api")
+     var data = JSON.stringify({
+       // we will pass our input data to server
+       year: this.state.year,
+       month: this.state.month,
+       user_id: this.state.user_id,
+     })
+const context=this;
+var successToken = (context.props.navigation.state.params.successToken);
+var data = new FormData();
+console.log(data);
+data.append("year", this.state.year);
+data.append("month", this.state.month);
+data.append("user_id", this.state.user_id);
+
+var xhr = new XMLHttpRequest();
+xhr.withCredentials = true;
+
+xhr.addEventListener("readystatechange", function () {
+  if (this.readyState === 4) {
+    // console.log(xhr.responseText)
+
+              // abc.getElementById("demo").innerHTML = text;
+      var abc=xhr.responseText;
+     //  var text ="";
+     //  for (i = 0; i < abc.length; i++) {
+     //      text += abc[i].status;
+     //  }
+     //  console.log(text);
+      //
+       context.props.navigation.navigate("ShowMonthlyReport",{abc});
+
+  }
+});
+
+xhr.open("POST", "http://erpportaltest.xeamventures.com/api/v1/monthly-attendance-report");
+xhr.setRequestHeader("Accept", "application/json");
+xhr.setRequestHeader("Authorization", "Bearer " + successToken);
+xhr.send(data);
+   }
+
+
+
+
+  render() {
+
+    const context=this;
+    // const card = {card: {width: '100%', height: '100%'}};
+    var abc =(this.props.navigation.state.params.abc);
+    // console.log(abc);
+// var abc = JSON.parse(context.props.navigation.state.params.abc);
+console.log(abc)
+    // var monthly={id:abc};
+
+    // const data=this.responseText;
+    // console.log(data.success.user.id);
+    const {navigate} = this.props.navigation;
+
+    return (
+
+      <Card>
+      <Button
+        style={styles.button}
+        onPress={() => this.show()}>
+        SHOW.
+      </Button>
+
+      </Card>
+
+    );
+}
+
+
+}
+
+const styles = StyleSheet.create({
+  button: {
+    marginBottom:0,
+    color: '#DCE4EF',
+    paddingTop:10,
+    paddingBottom:10,
+    paddingLeft:20,
+    paddingRight:20,
+    backgroundColor:'rgb(19,111,232)',
+    borderRadius:10,
+    borderWidth: 1,
+    borderColor: 'rgb(0,0,0)'
+  },
+});
