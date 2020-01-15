@@ -1,0 +1,158 @@
+import React from 'react';
+import {
+
+  FlatList,
+  Alert,
+  PermissionsAndroid,
+  ActivityIndicator,
+  Image,
+  PixelRatio,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  ImageBackground,
+  ScrollView,
+  Dimensions
+} from 'react-native';
+import ImagePicker from 'react-native-image-picker';
+import Button from 'react-native-button';
+import {
+  Card,
+  CardImage,
+  CardTitle,
+  CardContent,
+  CardAction,
+} from 'react-native-card-view';
+
+import {createAppContainer} from 'react-navigation';
+import {createStackNavigator} from 'react-navigation-stack';
+
+const { width: viewportWidth, height: viewportHeight } = Dimensions.get('window');
+export default class monthlyreport extends React.Component {
+  static navigationOptions = {
+     header: null,
+  };
+
+  constructor(props) {
+    super(props)
+    this.state = {
+          abc:[],
+    };
+  }
+// componentDidMount (){
+//
+// }
+  render() {
+// const {status} = this.state;
+    const {navigate} = this.props.navigation;
+    const context=this;
+    const card = {card: {width: '100%', height: '100%'}};
+    var abc = JSON.parse(context.props.navigation.state.params.abc);
+    var abc= abc.success.user.monthly_data;
+    // var length=2;
+
+    var date ="";
+      for (i = 0; i < abc.length; i++) {
+          date += abc[i].on_date.split(',').join('');
+      };
+      var status ="";
+        for (i = 0; i < abc.length; i++) {
+            status += abc[i].status.split(" ");
+        };
+        var first_punch ="";
+          for (i = 0; i < abc.length; i++) {
+              first_punch += abc[i].first_punch.split(/(\d)/);
+          };
+          var last_punch ="";
+            for (i = 0; i < abc.length; i++) {
+                last_punch += abc[i].last_punch;
+            };
+//             let user_date = date.split('\n').map(date => {
+//     return {date}
+// });
+    console.log(date);
+
+    return (
+<Card>
+<View style={styles.CardView}>
+<View style={{marginTop:0,backgroundColor:'#0080FF',height:50,width:'100%',borderRadius: 10,}}>
+<Text style={{top:5,left:10,fontSize:15}}>Date</Text>
+<Text style={{bottom:15,left:70,fontSize:15}}>Status</Text>
+<Text style={{bottom:35,left:150,fontSize:15}}>First Punch</Text>
+<Text style={{bottom:55,left:250,fontSize:15}}>Last Punch</Text>
+<Text style={{bottom:75,left:350,fontSize:15}}>View</Text>
+</View>
+
+<ScrollView style={{wodth:'100%'}}>
+
+<View >
+<Text>{date}</Text>
+</View>
+<View style={{flexDirection:'column',width:"100%"}}>
+<Text style={{}}>{status}</Text>
+</View>
+<View >
+<Text >{first_punch}{"\n"}</Text>
+</View>
+<View >
+<Text >{last_punch}{"\n"}</Text>
+</View>
+
+</ScrollView>
+
+</View>
+
+</Card>
+    );
+}
+}
+const styles = StyleSheet.create({
+  button: {
+     marginBottom:0,
+    color: '#DCE4EF',
+    paddingTop:10,
+    paddingBottom:10,
+    paddingLeft:20,
+    paddingRight:20,
+    backgroundColor:'rgb(19,111,232)',
+    borderRadius:10,
+    borderWidth: 1,
+    borderColor: 'rgb(0,0,0)'
+  },
+  CardView: {
+    marginTop:200,
+    flex:0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderTopWidth: 1.5,
+    borderBottomWidth:1.5,
+    borderRightWidth:1.5,
+    borderLeftWidth:1.5,
+    borderColor: 'rgb(0,0,0)',
+    width:viewportWidth/1.03,
+    height: viewportHeight / 1.5,
+    // shadowOffset:{  width: 100,  height: 100,  },
+    shadowColor: '#330000',
+    shadowOpacity: 0,
+    // shadowRadius: 0,
+    elevation: 5,
+  },
+  info: {
+    flex:2,
+    flexDirection:'column',
+
+
+
+        marginLeft: 0,
+    },
+    title: {
+      flex:2,
+      textAlign:'justify',
+      width:100,
+        fontSize: 14,
+
+    },
+});
