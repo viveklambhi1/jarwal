@@ -180,10 +180,10 @@ xhr.send(data);
              date += final_data[i].name.split('').join('')+'\n'+'\n';
          };
 
-         var e_name ="";
-           for (i = 0; i < tvf.length; i++) {
-               e_name += tvf[i].fullname.split('').join('')+'\n';
-           };
+//          var e_name ="";
+//            for (i = 0; i < tvf.length; i++) {
+//                e_name += tvf[i].fullname.split('').join('')+'\n';
+//            };
 
            var e_id ="";
              for (i = 0; i < tvf.length; i++) {
@@ -225,8 +225,10 @@ console.log(e_id.split('').join(''))
 <Picker
 
 style={{bottom:50,left:100,height: 100, width: 150}}
->
-<Picker.Item label={e_name} value='0' />
+>{tvf.map((val)=>{
+<Picker.Item label={val.fullname} value='0' />
+})}
+
 
 </Picker>
 
